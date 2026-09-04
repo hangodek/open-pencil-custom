@@ -343,28 +343,48 @@ fn prepare_antigravity_home(
             )
         })?;
         let source_path = host_home.join(".gemini/config/mcp_config.json");
-        let source: serde_json::Value = serde_json::from_slice(&fs::read(source_path)?)
-            .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
-        let server = source["mcpServers"]["openpencil"]
-            .as_object()
-            .ok_or_else(|| {
-                io::Error::new(
-                    io::ErrorKind::NotFound,
-                    "Antigravity requires OpenPencil MCP to be enabled in Settings",
-                )
-            })?;
-        if server.get("disabled").and_then(serde_json::Value::as_bool) == Some(true) {
+        let source: Option<serde_json::Value> = fs::read(&source_path)
+            .ok()
+            .and_then(|bytes| serde_json::from_slice(&bytes).ok());
+        let server = source
+            .as_ref()
+            .and_then(|s| s.get("mcpServers")?.get("openpencil")?.as_object());
+
+        let (url, expected_port) = if let Some(server) = server {
+            if server.get("disabled").and_then(serde_json::Value::as_bool) == Some(true) {
+                return Err(io::Error::new(
+                    io::ErrorKind::PermissionDenied,
+                    "Antigravity OpenPencil MCP connection is disabled",
+                ));
+            }
+            let url = server
+                .get("serverUrl")
+                .and_then(serde_json::Value::as_str)
+                .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "missing serverUrl"))?;
+            let port = validate_openpencil_url(url)?;
+            if let Ok(live_port) = read_live_mcp_port_for_current_process(host_home) {
+                if port != live_port {
+                    let url = format!("http://127.0.0.1:{live_port}/mcp");
+                    let _ = auto_configure_antigravity_mcp(host_home, live_port);
+                    (url, live_port)
+                } else {
+                    (url.to_owned(), port)
+                }
+            } else {
+                (url.to_owned(), port)
+            }
+        } else if let Ok(live_port) = read_live_mcp_port_for_current_process(host_home) {
+            let url = format!("http://127.0.0.1:{live_port}/mcp");
+            let _ = auto_configure_antigravity_mcp(host_home, live_port);
+            (url, live_port)
+        } else {
             return Err(io::Error::new(
-                io::ErrorKind::PermissionDenied,
-                "Antigravity OpenPencil MCP connection is disabled",
+                io::ErrorKind::NotFound,
+                "Antigravity requires OpenPencil MCP to be enabled in Settings",
             ));
-        }
-        let url = server
-            .get("serverUrl")
-            .and_then(serde_json::Value::as_str)
-            .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "missing serverUrl"))?;
-        validate_live_mcp_record(host_home, validate_openpencil_url(url)?)?;
-        Some(url.to_owned())
+        };
+        validate_live_mcp_record(host_home, expected_port)?;
+        Some(url)
     } else {
         None
     };
@@ -470,6 +490,10 @@ fn validate_live_mcp_record(host_home: &Path, expected_port: u16) -> io::Result<
         ))
     }
 }
+
+use crate::mcp_port_file::{
+    auto_configure_antigravity_mcp, read_live_mcp_port_for_current_process,
+};
 
 fn write_private_json(path: &Path, value: &serde_json::Value) -> io::Result<()> {
     fs::write(path, serde_json::to_vec(value).map_err(io::Error::other)?)?;

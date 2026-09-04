@@ -75,6 +75,10 @@ pub fn run_web_canvas(options: ServeWebOptions) -> Result<()> {
     // Shared across connection threads: the document authority (one writer at a
     // time via the Mutex) + the SSE broadcast hub. Thread-per-connection so a
     // long-lived SSE stream (or a slow client) never blocks other clients.
+    if loopback_bind {
+        editor.editor_ui.agent_settings.mcp_server.port = bound;
+        editor.editor_ui.agent_settings.mcp_server.running = true;
+    }
     let state = Arc::new(Mutex::new(WebCanvasState::new_with_path_and_policy(
         editor,
         bound,
@@ -93,6 +97,13 @@ pub fn run_web_canvas(options: ServeWebOptions) -> Result<()> {
     // — it keeps the existing `OPENPENCIL_MCP_TOKEN` shutdown contract as
     // the only lifecycle signal, byte-for-byte as before.
     let managed_token = managed.then(random_token);
+    if loopback_bind {
+        let token = managed_token.as_deref().unwrap_or("");
+        crate::mcp_port_file::write(bound, token);
+        if let Some(home) = dirs::home_dir() {
+            let _ = crate::mcp_port_file::auto_configure_antigravity_mcp(&home, bound);
+        }
+    }
     if let Some(token) = &managed_token {
         let mut out = std::io::stdout().lock();
         let _ = writeln!(out, "{}", handshake_json(bound, token));
@@ -191,6 +202,9 @@ pub fn run_web_canvas(options: ServeWebOptions) -> Result<()> {
         if spawned.is_err() {
             conn_count.fetch_sub(1, Ordering::AcqRel);
         }
+    }
+    if loopback_bind {
+        crate::mcp_port_file::remove();
     }
     eprintln!("openpencil-desktop --serve-web: shutdown requested; exiting");
     Ok(())

@@ -267,6 +267,15 @@ pub(super) fn apply_provider_probe_outcome(
         );
         sort_discovered_models(&mut state.editor);
     }
+    if connected && provider == op_editor_core::AgentProvider::Antigravity {
+        state.editor.editor_ui.agent_settings.mcp_cli_enabled
+            [op_editor_core::agent_settings::McpCli::Antigravity.index()] = true;
+        state.editor.editor_ui.agent_settings.mcp_server.running = true;
+        state.editor.editor_ui.agent_settings.mcp_server.port = state.port;
+        if let Some(home) = dirs::home_dir() {
+            let _ = crate::mcp_port_file::auto_configure_antigravity_mcp(&home, state.port);
+        }
+    }
     state.editor.rebuild_chat_models();
     WebReply {
         status: "200 OK",

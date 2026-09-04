@@ -304,7 +304,7 @@ pub(crate) fn prepare_turn(state: &mut EditorState) -> Option<PreparedTurn> {
         (builtin_provider_id.is_some()
             || credential.is_some()
             || entry.builtin_provider_id.is_none())
-            .then(|| entry.provider.wire_id())
+        .then(|| entry.provider.wire_id())
     });
     let thinking = state.chat.thinking_mode.as_str();
     let effort = state.chat.effort_level.as_str();

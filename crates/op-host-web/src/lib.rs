@@ -129,13 +129,13 @@ mod web_model_catalog;
 mod web_settings;
 // The Styles tab's DESIGN.md file pick — the browser half of the import the
 // paste box shares (desktop `style_import_host` counterpart).
-#[cfg(feature = "canvaskit")]
-mod web_style_import;
-#[cfg(feature = "canvaskit")]
-mod web_agent_connect;
 #[cfg(all(test, feature = "canvaskit"))]
 #[allow(dead_code)]
 mod web_acp_connect;
+#[cfg(feature = "canvaskit")]
+mod web_agent_connect;
+#[cfg(feature = "canvaskit")]
+mod web_style_import;
 // postMessage bridge to the VS Code extension host (token bootstrap, document
 // open, snapshot, save-committed, conflict resolution). DOM wiring only — the
 // wire codec lives in `op_editor_core::bridge_protocol`.

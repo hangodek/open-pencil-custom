@@ -72,7 +72,7 @@ fn web_system_pencil_cursor_selection_updates_style() {
 }
 
 #[test]
-fn web_agent_settings_hides_cli_provider_connect_targets() {
+fn web_agent_settings_exposes_cli_provider_connect_targets() {
     let host = WidgetHost::new();
     let panel = AgentSettingsPanel::for_web_editor(&host.editor_state);
     let rect = panel.rect(1200.0, 800.0);
@@ -83,13 +83,13 @@ fn web_agent_settings_hides_cli_provider_connect_targets() {
             rect,
             AgentSettingsHit::Connect(AgentProvider::CodexCli)
         )
-        .is_none(),
-        "web agent settings should hide Codex CLI connect targets"
+        .is_some(),
+        "web agent settings should expose CLI connect targets"
     );
 }
 
 #[test]
-fn web_agent_settings_hides_mcp_tab_from_sidebar() {
+fn web_agent_settings_exposes_mcp_tab_in_sidebar() {
     let host = WidgetHost::new();
     let panel = AgentSettingsPanel::for_web_editor(&host.editor_state);
     let rect = panel.rect(1200.0, 800.0);
@@ -99,13 +99,9 @@ fn web_agent_settings_hides_mcp_tab_from_sidebar() {
         AgentSettingsHit::SelectTab(AgentSettingsTab::Mcp),
     );
 
-    assert_eq!(
-        mcp_nav, None,
-        "web agent settings should not expose the MCP tab"
-    );
-    assert_eq!(
-        host.editor_state.editor_ui.agent_settings.tab,
-        AgentSettingsTab::Agents
+    assert!(
+        mcp_nav.is_some(),
+        "web agent settings should expose the MCP tab"
     );
 }
 
@@ -204,7 +200,7 @@ fn add_provider_opens_unsaved_builtin_agent_draft() {
 }
 
 #[test]
-fn web_add_acp_agent_control_is_hidden() {
+fn web_add_acp_agent_control_is_handled() {
     let mut host = WidgetHost::new();
     let panel = AgentSettingsPanel::for_web_editor(&host.editor_state);
     let rect = panel.rect(1200.0, 800.0);
@@ -226,15 +222,18 @@ fn web_add_acp_agent_control_is_hidden() {
 
     assert_eq!(
         panel.hit_test(rect, Point2D::new(add_x, add_y)),
-        AgentSettingsHit::Inside
+        AgentSettingsHit::AddAcpAgent
     );
     assert!(host.dispatch_agent_settings_press(add_x, add_y, 1200.0, 800.0));
 
     let settings = &host.editor_state.editor_ui.agent_settings;
-    assert!(settings.acp_agents.is_empty());
-    assert!(settings.acp_agent_draft.is_none());
-    assert_eq!(settings.focus, None);
-    assert_eq!(host.editor_state.editor_ui.pressed_button, None);
+    assert!(settings.acp_agent_draft.is_some());
+    assert_eq!(
+        host.editor_state.editor_ui.pressed_button,
+        Some(ButtonPressTarget::AgentSettings(
+            AgentSettingsButton::AddAcpAgent
+        ))
+    );
 }
 
 #[test]
@@ -584,36 +583,26 @@ fn image_generation_profile_header_click_toggles_editor_closed() {
 }
 
 #[test]
-fn web_mcp_server_button_is_hidden_when_mcp_tab_is_persisted() {
+fn web_mcp_server_button_press_is_handled_when_mcp_tab_is_selected() {
     let mut host = WidgetHost::new();
     host.editor_state.editor_ui.agent_settings.tab = AgentSettingsTab::Mcp;
     let panel = AgentSettingsPanel::for_web_editor(&host.editor_state);
     let rect = panel.rect(1200.0, 800.0);
-    // The web tab set has no MCP entry, so a persisted `tab = Mcp` falls
-    // back to Agents. Press exactly where the MCP tab would have put its
-    // Start/Stop button: whatever the Agents tab paints there, it must
-    // never be the server toggle. (The old fixture asserted `Inside` at a
-    // hand-copied offset, which only held while the fallback tab happened
-    // to be empty there — an incidental property, not the contract this
-    // test is named for.)
     let button = op_editor_ui::widgets::agent_settings_panel::mcp_server_button(rect);
     let x = button.origin.x + button.size.x / 2.0;
     let y = button.origin.y + button.size.y / 2.0;
 
-    assert_ne!(
+    assert_eq!(
         panel.hit_test(rect, Point2D::new(x, y)),
         AgentSettingsHit::ToggleMcpServer
     );
     assert!(host.dispatch_agent_settings_press(x, y, 1200.0, 800.0));
-    assert!(
-        !host
-            .editor_state
-            .editor_ui
-            .agent_settings
-            .mcp_server
-            .running
+    assert_eq!(
+        host.editor_state.editor_ui.pressed_button,
+        Some(ButtonPressTarget::AgentSettings(
+            AgentSettingsButton::McpServer
+        ))
     );
-    assert_eq!(host.editor_state.editor_ui.pressed_button, None);
 }
 
 #[test]
@@ -669,7 +658,7 @@ fn web_mcp_client_config_copy_is_hidden_when_mcp_tab_is_persisted() {
 }
 
 #[test]
-fn web_mcp_server_button_hover_is_hidden_when_mcp_tab_is_persisted() {
+fn web_mcp_server_button_hover_tracks_cursor_when_mcp_tab_is_selected() {
     let mut host = WidgetHost::new();
     host.last_viewport_w = 1200.0;
     host.last_viewport_h = 800.0;
@@ -695,10 +684,9 @@ fn web_mcp_server_button_hover_is_hidden_when_mcp_tab_is_persisted() {
     let server_card_y = content_y + 36.0;
     let button_x = content_x + content_w - 16.0 - 72.0;
 
-    assert!(!host.update_agent_settings_hover(button_x + 36.0, server_card_y + 26.0,));
+    assert!(host.update_agent_settings_hover(button_x + 36.0, server_card_y + 26.0));
     assert!(
-        !host
-            .editor_state
+        host.editor_state
             .editor_ui
             .agent_settings
             .hover_mcp_server_button

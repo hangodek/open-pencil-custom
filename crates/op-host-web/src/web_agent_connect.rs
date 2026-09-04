@@ -128,6 +128,11 @@ pub(crate) fn apply_provider_connect_response(
         state.chat.discovered_models.extend(models);
         sort_discovered_models(state);
     }
+    if connected && provider == AgentProvider::Antigravity {
+        use op_editor_core::agent_settings::McpCli;
+        state.editor_ui.agent_settings.mcp_cli_enabled[McpCli::Antigravity.index()] = true;
+        state.editor_ui.agent_settings.mcp_server.running = true;
+    }
     state.rebuild_chat_models();
     true
 }

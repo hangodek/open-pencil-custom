@@ -349,20 +349,27 @@ fn reconcile_models_hides_disconnected_cli_models_and_retains_connected() {
     let mut state = EditorState::new();
     state.chat.discovered_models = vec![
         ModelEntry::new(AgentProvider::CodexCli, "gpt-cli", "CLI Model"),
-        ModelEntry::new(AgentProvider::Antigravity, "gemini-2.5-pro", "Gemini 2.5 Pro"),
+        ModelEntry::new(
+            AgentProvider::Antigravity,
+            "gemini-2.5-pro",
+            "Gemini 2.5 Pro",
+        ),
     ];
 
     reconcile_models(&mut state);
     assert!(state.chat.available_models.is_empty());
 
-    state.editor_ui.agent_settings.apply_provider_connect_outcome(
-        AgentProvider::Antigravity,
-        op_editor_core::ProviderConnectOutcome {
-            connected: true,
-            info: Some("Connected".into()),
-            ..Default::default()
-        },
-    );
+    state
+        .editor_ui
+        .agent_settings
+        .apply_provider_connect_outcome(
+            AgentProvider::Antigravity,
+            op_editor_core::ProviderConnectOutcome {
+                connected: true,
+                info: Some("Connected".into()),
+                ..Default::default()
+            },
+        );
 
     reconcile_models(&mut state);
     assert_eq!(state.chat.available_models.len(), 1);

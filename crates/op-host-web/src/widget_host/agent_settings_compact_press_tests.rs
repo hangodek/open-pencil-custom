@@ -108,7 +108,7 @@ fn builtin_compact_remove_press_sets_and_release_clears_agent_settings_button() 
 }
 
 #[test]
-fn web_acp_compact_edit_control_is_hidden() {
+fn web_acp_compact_edit_control_is_handled() {
     let mut host = WidgetHost::new();
     host.editor_state.editor_ui.agent_settings.add_acp_agent();
     host.editor_state.editor_ui.agent_settings.hover_acp_agent = 0;
@@ -120,8 +120,12 @@ fn web_acp_compact_edit_control_is_hidden() {
         1200.0,
         800.0,
     ));
-    assert_eq!(host.editor_state.editor_ui.pressed_button, None);
-    assert_eq!(host.editor_state.editor_ui.agent_settings.focus, None);
+    assert_eq!(
+        host.editor_state.editor_ui.pressed_button,
+        Some(ButtonPressTarget::AgentSettings(
+            AgentSettingsButton::AcpEdit(0)
+        ))
+    );
     assert_eq!(
         host.editor_state.editor_ui.agent_settings.acp_agents.len(),
         1
@@ -129,7 +133,7 @@ fn web_acp_compact_edit_control_is_hidden() {
 }
 
 #[test]
-fn web_acp_compact_remove_control_is_hidden() {
+fn web_acp_compact_remove_control_is_handled() {
     let mut host = WidgetHost::new();
     host.editor_state.editor_ui.agent_settings.add_acp_agent();
     host.editor_state.editor_ui.agent_settings.hover_acp_agent = 0;
@@ -141,10 +145,14 @@ fn web_acp_compact_remove_control_is_hidden() {
         1200.0,
         800.0,
     ));
-    assert_eq!(host.editor_state.editor_ui.pressed_button, None);
-    assert_eq!(host.editor_state.editor_ui.agent_settings.focus, None);
+    assert_eq!(
+        host.editor_state.editor_ui.pressed_button,
+        Some(ButtonPressTarget::AgentSettings(
+            AgentSettingsButton::AcpRemove(0)
+        ))
+    );
     assert_eq!(
         host.editor_state.editor_ui.agent_settings.acp_agents.len(),
-        1
+        0
     );
 }

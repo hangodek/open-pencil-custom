@@ -93,7 +93,7 @@ fn builtin_draft_cancel_press_sets_and_release_clears_agent_settings_button() {
 }
 
 #[test]
-fn web_acp_draft_save_control_is_hidden() {
+fn web_acp_draft_save_control_is_handled() {
     let mut host = WidgetHost::new();
     host.editor_state
         .editor_ui
@@ -114,23 +114,22 @@ fn web_acp_draft_save_control_is_hidden() {
         1200.0,
         800.0,
     ));
-    assert_eq!(host.editor_state.editor_ui.pressed_button, None);
+    assert_eq!(
+        host.editor_state.editor_ui.pressed_button,
+        Some(ButtonPressTarget::AgentSettings(
+            AgentSettingsButton::AcpSaveDraft
+        ))
+    );
     assert!(host
         .editor_state
         .editor_ui
         .agent_settings
         .acp_agent_draft
-        .is_some());
-    assert!(host
-        .editor_state
-        .editor_ui
-        .agent_settings
-        .acp_agents
-        .is_empty());
+        .is_none());
 }
 
 #[test]
-fn web_acp_draft_cancel_control_is_hidden() {
+fn web_acp_draft_cancel_control_is_handled() {
     let mut host = WidgetHost::new();
     host.editor_state
         .editor_ui
@@ -144,11 +143,16 @@ fn web_acp_draft_cancel_control_is_hidden() {
         1200.0,
         800.0,
     ));
-    assert_eq!(host.editor_state.editor_ui.pressed_button, None);
+    assert_eq!(
+        host.editor_state.editor_ui.pressed_button,
+        Some(ButtonPressTarget::AgentSettings(
+            AgentSettingsButton::AcpCancelDraft
+        ))
+    );
     assert!(host
         .editor_state
         .editor_ui
         .agent_settings
         .acp_agent_draft
-        .is_some());
+        .is_none());
 }

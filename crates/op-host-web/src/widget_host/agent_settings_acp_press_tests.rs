@@ -26,8 +26,10 @@ fn acp_card_y(content_y: f32) -> f32 {
         + 28.0
 }
 
+use op_editor_core::{AgentSettingsButton, ButtonPressTarget};
+
 #[test]
-fn web_acp_agent_connect_control_is_hidden() {
+fn web_acp_agent_connect_control_is_handled() {
     let mut host = WidgetHost::new();
     host.editor_state.editor_ui.agent_settings.add_acp_agent();
     host.editor_state.editor_ui.agent_settings.acp_agents[0].command = "op-agent".into();
@@ -40,12 +42,17 @@ fn web_acp_agent_connect_control_is_hidden() {
         1200.0,
         800.0,
     ));
-    assert_eq!(host.editor_state.editor_ui.pressed_button, None);
+    assert_eq!(
+        host.editor_state.editor_ui.pressed_button,
+        Some(ButtonPressTarget::AgentSettings(
+            AgentSettingsButton::AcpConnection(0)
+        ))
+    );
     assert!(!host.editor_state.editor_ui.agent_settings.acp_agents[0].connected);
     assert!(host
         .editor_state
         .editor_ui
         .agent_settings
         .pending_acp_agent_connect
-        .is_none());
+        .is_some());
 }

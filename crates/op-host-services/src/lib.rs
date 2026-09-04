@@ -86,6 +86,7 @@ mod import_html_url;
 mod import_html_url_error;
 pub mod loop_blocker_ledger;
 pub mod mcp_live;
+pub mod mcp_port_file;
 pub mod mcp_serve;
 pub mod model_catalog_refresh;
 pub mod model_discovery;
