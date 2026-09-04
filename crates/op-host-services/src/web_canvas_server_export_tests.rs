@@ -254,8 +254,8 @@ fn png_dimensions(bytes: &[u8]) -> (u32, u32) {
 }
 
 #[test]
-fn web_cli_and_acp_connect_routes_are_unavailable_in_both_dispatchers() {
-    for path in ["/api/agents/connect", "/api/acp/connect"] {
+fn web_acp_connect_route_is_unavailable_in_both_dispatchers() {
+    for path in ["/api/acp/connect"] {
         let direct = handle_web_canvas_request("POST", path, "{}", &mut fresh_state());
         assert_eq!(direct.status, "404 Not Found", "path={path}");
 
@@ -265,6 +265,12 @@ fn web_cli_and_acp_connect_routes_are_unavailable_in_both_dispatchers() {
             "path={path}, {response}"
         );
     }
+}
+
+#[test]
+fn web_agents_connect_route_is_available_in_local_mode() {
+    let direct = handle_web_canvas_request("POST", "/api/agents/connect", "{}", &mut fresh_state());
+    assert_eq!(direct.status, "400 Bad Request");
 }
 
 #[test]

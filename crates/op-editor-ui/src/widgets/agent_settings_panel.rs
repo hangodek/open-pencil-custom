@@ -373,7 +373,7 @@ impl<'a> AgentSettingsPanel<'a> {
             theme: theme_for(&state.editor_ui),
             settings: state.editor_ui.agent_settings.clone(),
             now_ms,
-            mode: mode_for_ui(&state.editor_ui, AgentSettingsPanelMode::WebBuiltinOnly),
+            mode: mode_for_ui(&state.editor_ui, AgentSettingsPanelMode::Full),
             ui: &state.editor_ui,
         }
     }

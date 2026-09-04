@@ -131,9 +131,8 @@ mod web_settings;
 // paste box shares (desktop `style_import_host` counterpart).
 #[cfg(feature = "canvaskit")]
 mod web_style_import;
-// The daemon ACP route intentionally remains unavailable in production.
-// Compile the dormant browser bridge in CanvasKit tests so its request
-// generation contract cannot silently drift from the shared core state.
+#[cfg(feature = "canvaskit")]
+mod web_agent_connect;
 #[cfg(all(test, feature = "canvaskit"))]
 #[allow(dead_code)]
 mod web_acp_connect;

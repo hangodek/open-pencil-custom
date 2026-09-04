@@ -197,5 +197,6 @@ fn provider_key(provider: AgentProvider) -> &'static str {
         AgentProvider::GithubCopilot => "github-copilot",
         AgentProvider::Antigravity => "antigravity",
         AgentProvider::GrokBuild => "grok-build",
+        AgentProvider::DeepSeekHarness => "deepseek-harness",
     }
 }

@@ -284,13 +284,14 @@ pub(crate) struct PreparedTurn {
 /// transcript bubble.
 pub(crate) fn prepare_turn(state: &mut EditorState) -> Option<PreparedTurn> {
     let selected = state.chat.selected_model_entry().cloned();
-    // Host CLI/ACP providers are intentionally unavailable on the browser
-    // surface. Reconciliation normally makes this impossible, but reject a
-    // transient stale CLI selection before consuming the pending send too.
-    if selected
-        .as_ref()
-        .is_some_and(|entry| entry.builtin_provider_id.is_none())
-    {
+    // Reject disconnected CLI selection before consuming the pending send.
+    if selected.as_ref().is_some_and(|entry| {
+        entry.builtin_provider_id.is_none()
+            && !state
+                .editor_ui
+                .agent_settings
+                .provider_verified_connected(entry.provider)
+    }) {
         return None;
     }
     let user_text = state.chat.pending_send.take()?;
@@ -298,9 +299,12 @@ pub(crate) fn prepare_turn(state: &mut EditorState) -> Option<PreparedTurn> {
         crate::web_ai_credentials::selected_target(state);
     let provider = selected.as_ref().and_then(|entry| {
         // Legacy string catalogs use an unqualified model id and must stay on
-        // the daemon's ambiguity-safe built-in resolver. Structured built-ins
-        // and request-scoped browser credentials can carry exact identity.
-        (builtin_provider_id.is_some() || credential.is_some()).then(|| entry.provider.wire_id())
+        // the daemon's ambiguity-safe built-in resolver. Structured built-ins,
+        // request-scoped browser credentials, and connected CLI models carry exact identity.
+        (builtin_provider_id.is_some()
+            || credential.is_some()
+            || entry.builtin_provider_id.is_none())
+            .then(|| entry.provider.wire_id())
     });
     let thinking = state.chat.thinking_mode.as_str();
     let effort = state.chat.effort_level.as_str();

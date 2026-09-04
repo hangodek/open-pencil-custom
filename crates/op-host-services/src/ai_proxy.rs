@@ -285,6 +285,13 @@ pub fn proxy_provider_for_request_with_chat_session(
                 .map(|provider| Box::new(provider) as Box<dyn ChatProvider>),
         );
     }
+    if request.provider == Some(AgentProvider::Antigravity) {
+        return Ok(if _chat_session {
+            crate::chat_subprocess::SubprocessProvider::for_cli(op_ai::chat_provider::CliName::Antigravity)
+        } else {
+            crate::chat_subprocess::SubprocessProvider::for_cli_generation(op_ai::chat_provider::CliName::Antigravity)
+        }.map(|p| Box::new(p) as Box<dyn ChatProvider>));
+    }
 
     Ok(proxy_builtin_for_identity(
         editor,

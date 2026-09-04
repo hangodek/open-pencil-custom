@@ -200,6 +200,12 @@ pub(crate) fn reconcile_models(state: &mut EditorState) {
         .discovered_models
         .iter()
         .filter(|entry| {
+            if entry.builtin_provider_id.is_none() {
+                return state
+                    .editor_ui
+                    .agent_settings
+                    .provider_verified_connected(entry.provider);
+            }
             let Some(daemon_id) = daemon_builtin_id(entry) else {
                 return false;
             };

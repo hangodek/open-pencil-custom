@@ -382,6 +382,7 @@ pub(super) async fn mount_ck(canvas_id: String) -> Result<(), JsValue> {
                 // (mirrors the skia mount's post-press drain points).
                 drop(b);
                 crate::web_chat::drain_chat_flags(&inner);
+                crate::web_agent_connect::drain_pending_provider_connect(&inner);
                 crate::web_image_panel::drain_image_jobs(&inner);
                 crate::web_builtin_model_discovery::drain_pending_builtin_model_discovery(&inner);
                 crate::iconify_web::drain_iconify_request(&inner);

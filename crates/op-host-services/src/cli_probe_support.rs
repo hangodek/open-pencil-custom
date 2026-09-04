@@ -151,10 +151,7 @@ impl PipeCapture {
         let sink = Arc::clone(&retained);
         let reader = std::thread::spawn(move || {
             let mut chunk = [0_u8; 8192];
-            loop {
-                let Ok(count) = pipe.read(&mut chunk) else {
-                    break;
-                };
+            while let Ok(count) = pipe.read(&mut chunk) {
                 if count == 0 {
                     break;
                 }

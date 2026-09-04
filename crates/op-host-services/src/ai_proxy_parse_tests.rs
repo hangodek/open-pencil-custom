@@ -442,4 +442,16 @@ fn explicit_cli_provider_remains_unavailable_to_web_proxy() {
     .expect("request is valid");
     assert!(provider.is_none());
     assert!(proxy_provider(&editor, "default").is_none());
+
+    let agy_request =
+        parse_ai_stream_body(r#"{"provider":"antigravity","model":"default","user":"hi"}"#)
+            .expect("request parses");
+    let agy_provider = proxy_provider_for_request_with_chat_session(
+        &editor,
+        &agy_request,
+        true,
+        crate::web_credential_policy::WebCredentialPersistence::BrowserOnly,
+    )
+    .expect("request is valid");
+    assert!(agy_provider.is_some());
 }

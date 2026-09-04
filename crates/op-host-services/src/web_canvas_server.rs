@@ -707,6 +707,11 @@ pub fn handle_web_canvas_request(
         ("GET", op_editor_core::collab_routes::STATE) => collab_routes::state(state),
         ("POST", op_editor_core::collab_routes::ACTION) => collab_routes::action(body, state),
         ("POST", op_editor_core::collab_routes::PRESENCE) => collab_routes::presence(body, state),
+        ("POST", "/api/agents/connect") if !state.mode.is_online() => {
+            connect_routes::handle_provider_connect_request_with_probe(body, state, |p| {
+                crate::provider_probe::connect_provider(p, op_editor_core::Locale::EnUs)
+            })
+        }
         _ => not_found_reply(),
     }
 }
