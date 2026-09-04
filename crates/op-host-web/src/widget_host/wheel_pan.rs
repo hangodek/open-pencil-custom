@@ -96,6 +96,39 @@ impl WidgetHost {
         true
     }
 
+    /// Scroll the open chat model-picker dropdown when the wheel lands over its
+    /// popover rect. Prevents the gesture from zooming or panning the canvas
+    /// behind it and updates the row hover highlight.
+    fn try_scroll_chat_model_picker(
+        &mut self,
+        x: f32,
+        y: f32,
+        delta: f32,
+        viewport_width: f32,
+        viewport_height: f32,
+    ) -> bool {
+        if !self.editor_state.editor_ui.chat_model_picker.open {
+            return false;
+        }
+        let Some(picker) = self.chat_model_picker_rect(viewport_width, viewport_height) else {
+            return false;
+        };
+        if !picker.contains(Point2D::new(x, y)) {
+            return false;
+        }
+        use op_editor_ui::widgets::ai_chat_model_picker::max_picker_scroll;
+        let max = max_picker_scroll(
+            &self.editor_state.chat.available_models,
+            self.editor_state.editor_ui.chat_model_picker_input.text(),
+        );
+        let next =
+            (self.editor_state.editor_ui.chat_model_picker.scroll.offset - delta).clamp(0.0, max);
+        self.editor_state.editor_ui.chat_model_picker.scroll.offset = next;
+        self.update_chat_model_picker_hover(x, y, picker);
+        self.mark_dirty();
+        true
+    }
+
     /// Route a vertical scroll delta inside Agent Settings. The open model
     /// and provider menus own the gesture before the settings body, matching
     /// their visual stacking order. Returning `true` for any point inside the
@@ -212,6 +245,9 @@ impl WidgetHost {
         if self.try_scroll_prompt_center(x, y, delta_y, viewport_width, viewport_height) {
             return true;
         }
+        if self.try_scroll_chat_model_picker(x, y, delta_y, viewport_width, viewport_height) {
+            return true;
+        }
         if self.try_scroll_chat_input(x, y, delta_y, viewport_width, viewport_height) {
             return true;
         }
@@ -292,6 +328,9 @@ impl WidgetHost {
             return true;
         }
         if self.try_scroll_prompt_center(x, y, dy, viewport_width, viewport_height) {
+            return true;
+        }
+        if self.try_scroll_chat_model_picker(x, y, dy, viewport_width, viewport_height) {
             return true;
         }
         if self.try_scroll_chat_input(x, y, dy, viewport_width, viewport_height) {

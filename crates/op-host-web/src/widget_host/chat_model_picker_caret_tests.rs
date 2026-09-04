@@ -122,3 +122,48 @@ fn opening_model_picker_clears_covered_hover_before_next_cursor_move() {
     assert_eq!(ui.property_action_hover, None);
     assert_eq!(ui.chat_header_hover, None);
 }
+
+#[test]
+fn wheel_over_open_chat_model_picker_scrolls_picker_and_leaves_canvas_alone() {
+    let mut host = WidgetHost::new();
+    for i in 0..25 {
+        host.editor_state
+            .chat
+            .available_models
+            .push(ModelEntry::new(
+                AgentProvider::CodexCli,
+                format!("model-{i}"),
+                format!("Model {i}"),
+            ));
+    }
+    host.editor_state.editor_ui.chat_model_picker.open = true;
+    let (viewport_w, viewport_h) = (1200.0, 800.0);
+    let picker_rect = host
+        .chat_model_picker_rect(viewport_w, viewport_h)
+        .expect("picker rect exists");
+    let point = Point2D::new(
+        picker_rect.origin.x + picker_rect.size.x / 2.0,
+        picker_rect.origin.y + picker_rect.size.y / 2.0,
+    );
+    let viewport_before = host.editor_state.viewport;
+    assert_eq!(
+        host.editor_state.editor_ui.chat_model_picker.scroll.offset,
+        0.0
+    );
+
+    // Scroll down (negative delta in apply_wheel adds to offset)
+    assert!(host.apply_wheel(point.x, point.y, -60.0, viewport_w, viewport_h));
+    assert_eq!(
+        host.editor_state.editor_ui.chat_model_picker.scroll.offset,
+        60.0
+    );
+    assert_eq!(host.editor_state.viewport, viewport_before);
+
+    // Trackpad pan gesture also scrolls the picker
+    assert!(host.apply_pan_gesture(point.x, point.y, 0.0, -30.0, viewport_w, viewport_h));
+    assert_eq!(
+        host.editor_state.editor_ui.chat_model_picker.scroll.offset,
+        90.0
+    );
+    assert_eq!(host.editor_state.viewport, viewport_before);
+}
