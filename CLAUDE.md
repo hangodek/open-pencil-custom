@@ -13,14 +13,15 @@ Detailed module docs load automatically in subdirectories:
 
 Tooling is **Cargo** (Rust — the product). The root has **no `package.json`**; the JS/**Bun** tooling for the web SDK lives under `packages/` — run SDK/JS scripts from there.
 
-- **Web dev server (Rust):** `bash scripts/start-web-rust.sh`
-- **Build (Rust):** `cargo build --workspace --release`
-- **Run all tests (Rust):** `cargo test --workspace`; single crate: `cargo test -p <crate>`
-- **Type check:** `cargo check --workspace`; wasm: `cargo check --target wasm32-unknown-unknown -p op-host-web --no-default-features --features web`
+- **Quick start:** `./run` (or `make`) — boots the web editor instantly at `http://127.0.0.1:3100/`
+- **Web dev server (Rust):** `./run web` or `bash scripts/start-web-rust.sh`
+- **Desktop app:** `./run desktop` or `cargo build -p op-host-desktop` → binary `openpencil-desktop` (live MCP on `127.0.0.1:<port>/mcp`)
+- **CLI:** `./run cli` or `cargo build -p op-cli` → binary `op`
+- **Build (Rust):** `./run build` or `cargo build --workspace --release`
+- **Run all tests (Rust):** `./run test` or `cargo test --workspace`; single crate: `cargo test -p <crate>`
+- **Type check:** `./run check` or `cargo check --workspace`; wasm: `cargo check --target wasm32-unknown-unknown -p op-host-web --no-default-features --features web`
 - **Lint / format (Rust):** `cargo clippy --workspace --all-targets -- -D warnings` / `cargo fmt --all`
 - **Lint / format (remaining TS SDK):** from `packages/`: `bun run lint` (oxlint) / `bun run format` (oxfmt)
-- **Desktop app:** `cargo build -p op-host-desktop` → binary `openpencil-desktop` (live MCP on `127.0.0.1:<port>/mcp`)
-- **CLI:** `cargo build -p op-cli` → binary `op`
 - **MCP server:** built into the desktop/web host (`--mcp <path>`); crate `op-mcp`
 - **Iconify catalog (Rust assets):** from `packages/`: `bun run generate-iconify-catalog`
 - **Sync all managed versions:** `scripts/sync-version.sh` reads the canonical version from root `Cargo.toml`; verify without writing via `tools/check-version-sync.sh`

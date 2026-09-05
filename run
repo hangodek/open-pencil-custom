@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+# OpenPencil Unified Runner
+# Usage:
+#   ./run               Start the web editor (instant startup if already built)
+#   ./run web           Same as above
+#   ./run desktop       Start the native desktop app
+#   ./run cli [args]    Run the OpenPencil CLI (`op`)
+#   ./run build         Build web bundle and server binary
+#   ./run test          Run tests
+#   ./run check         Run typecheck
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
+BOLD='\033[1m'
+GREEN='\033[0;32m'
+CYAN='\033[0;36m'
+RESET='\033[0m'
+
+show_help() {
+  printf "${BOLD}OpenPencil Runner${RESET}\n\n"
+  printf "${BOLD}USAGE:${RESET}\n"
+  printf "  ./run [COMMAND] [OPTIONS]\n\n"
+  printf "${BOLD}COMMANDS:${RESET}\n"
+  printf "  web                 Start the web editor in your browser (default)\n"
+  printf "  desktop             Start the native desktop app\n"
+  printf "  cli [args...]       Run the OpenPencil CLI tool ('op')\n"
+  printf "  build               Build the WebAssembly bundle and web server daemon\n"
+  printf "  test                Run workspace tests\n"
+  printf "  check               Run workspace type checking\n"
+  printf "  help, -h, --help    Show this help message\n\n"
+  printf "${BOLD}WEB OPTIONS (for './run' or './run web'):${RESET}\n"
+  printf "  -o, --open          Automatically open editor in default browser\n"
+  printf "  -p, --port <PORT>   Server port (default: 3100 or \$OPENPENCIL_SERVE_PORT)\n"
+  printf "  --host <HOST>       Server host (default: 127.0.0.1 or \$OPENPENCIL_SERVE_HOST)\n"
+  printf "  -b, --build         Force recompile wasm bundle and server binary\n"
+  printf "  [DOC_PATH]          Path to a .op file to open\n\n"
+  printf "${BOLD}EXAMPLES:${RESET}\n"
+  printf "  ./run               # Start web editor at http://127.0.0.1:3100/\n"
+  printf "  ./run -o            # Start web editor and open browser automatically\n"
+  printf "  ./run -p 8080       # Start web editor on port 8080\n"
+  printf "  ./run desktop       # Launch native desktop application\n"
+  printf "  ./run build         # Compile wasm bundle and server\n"
+}
+
+COMMAND="${1:-web}"
+
+case "$COMMAND" in
+  help|-h|--help)
+    show_help
+    exit 0
+    ;;
+  web)
+    shift || true
+    exec bash scripts/start-web-rust.sh "$@"
+    ;;
+  desktop)
+    shift || true
+    DESKTOP_BIN="target/release/openpencil-desktop"
+    if [ ! -x "$DESKTOP_BIN" ]; then
+      printf "${CYAN}Building native desktop app (release)...${RESET}\n"
+      cargo build -p op-host-desktop --release
+    fi
+    printf "${GREEN}Launching OpenPencil Desktop...${RESET}\n"
+    exec "$DESKTOP_BIN" "$@"
+    ;;
+  cli)
+    shift || true
+    CLI_BIN="target/release/op"
+    if [ ! -x "$CLI_BIN" ]; then
+      printf "${CYAN}Building OpenPencil CLI (release)...${RESET}\n"
+      cargo build -p op-cli --release
+    fi
+    exec "$CLI_BIN" "$@"
+    ;;
+  build)
+    printf "${CYAN}Building WebAssembly bundle & web server...${RESET}\n"
+    bash tools/check-wasm-bundle.sh
+    cargo build -p op-host-web-server --release
+    printf "${GREEN}Build completed successfully!${RESET}\n"
+    ;;
+  test)
+    shift || true
+    cargo test -p op-host-services -p op-host-web --features canvaskit "$@"
+    ;;
+  check)
+    shift || true
+    cargo check --workspace "$@"
+    ;;
+  -*)
+    exec bash scripts/start-web-rust.sh "$@"
+    ;;
+  *)
+    if [ -f "$COMMAND" ]; then
+      exec bash scripts/start-web-rust.sh "$@"
+    else
+      echo "Unknown command: $COMMAND" >&2
+      show_help
+      exit 1
+    fi
+    ;;
+esac

@@ -10,14 +10,15 @@ For full guidance see **`CLAUDE.md`** (this directory). Authoritative Rust archi
 
 Tooling is **Cargo** (Rust — the product). The root has **no `package.json`**; the JS/**Bun** tooling for the web SDK lives under `packages/` — run SDK/JS scripts from there.
 
-- **Web dev server (Rust):** `bash scripts/start-web-rust.sh`
-- **Build (Rust):** `cargo build --workspace --release`
-- **Tests (Rust):** `cargo test --workspace`; single crate: `cargo test -p <crate>`
-- **Type check:** `cargo check --workspace`; wasm: `cargo check --target wasm32-unknown-unknown -p op-host-web --no-default-features --features web`
+- **Quick start:** `./run` (or `make`) — boots the web editor instantly at `http://127.0.0.1:3100/`
+- **Web dev server (Rust):** `./run web` or `bash scripts/start-web-rust.sh`
+- **Desktop app:** `./run desktop` or `cargo build -p op-host-desktop` → binary `openpencil-desktop`
+- **CLI:** `./run cli` or `cargo build -p op-cli` → binary `op`
+- **Build (Rust):** `./run build` or `cargo build --workspace --release`
+- **Tests (Rust):** `./run test` or `cargo test --workspace`; single crate: `cargo test -p <crate>`
+- **Type check:** `./run check` or `cargo check --workspace`; wasm: `cargo check --target wasm32-unknown-unknown -p op-host-web --no-default-features --features web`
 - **Lint / format (Rust):** `cargo clippy --workspace --all-targets -- -D warnings` / `cargo fmt --all`
 - **Lint / format (TS SDK):** from `packages/`: `bun run lint` (oxlint) / `bun run format` (oxfmt)
-- **Desktop app:** `cargo build -p op-host-desktop` → binary `openpencil-desktop`
-- **CLI:** `cargo build -p op-cli` → binary `op`
 - **Iconify catalog (Rust assets):** from `packages/`: `bun run generate-iconify-catalog`
 
 ## Conventions
